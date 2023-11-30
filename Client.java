@@ -1,38 +1,37 @@
 import java.io.*;
 import java.net.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class Client {
+    private static final String SERVER_IP = "127.0.0.1";
+    private static final int SERVER_PORT = 5555;
+
     public static void main(String[] args) {
         try {
-            // Connect to the server
-            Socket socket = new Socket("localhost", 5000); // Assuming server is running on the same machine
-
-            // Set up input and output streams
+            Socket socket = new Socket(SERVER_IP, SERVER_PORT);
             BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            // Start a thread to handle incoming messages from the server
-            new Thread(() -> {
-                try {
-                    String receivedMessage;
-                    while ((receivedMessage = reader.readLine()) != null) {
-                        System.out.println("Received from server: " + receivedMessage);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+            System.out.print("Enter your name: ");
+            String name = userInput.readLine();
+            out.println(name);
+
+            while (true) {
+                System.out.print("Enter message (format: source:destination:message): ");
+                String message = userInput.readLine();
+
+                if (message.equalsIgnoreCase("exit")) {
+                    out.println("exit");
+                    break;
                 }
-            }).start();
 
-            // Read user input and send messages to the server
-            String userInputLine;
-            while ((userInputLine = userInput.readLine()) != null) {
-                String timeStamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
-                writer.println("[" + timeStamp + "] Client Message: " + userInputLine);
+                out.println(message);
+
+                String serverResponse = in.readLine();
+                System.out.println("Server: " + serverResponse);
             }
 
+            socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
